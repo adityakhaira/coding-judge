@@ -1,6 +1,7 @@
 console.log("server file ready");
 
 const express = require("express");
+const bcrypt=require("bcrypt");
 const connection = require("./src/config/db");
 
 const app = express();
@@ -159,6 +160,41 @@ app.delete("/problems/:id", function(req, res) {
             id: id
         });
     });
+});
+
+
+// POST - Create a new user
+app.post("/users", function(req, res) {
+    const { name, email, password, role } = req.body;
+
+    if (!name || !email || !password) {
+        return res.status(400).json({
+            error: "Name, email and password are required"
+        });
+    }
+
+    const sql = `
+        INSERT INTO users (name, email, password, role)
+        VALUES (?, ?, ?, ?)
+    `;
+
+    connection.query(
+        sql,
+        [name, email, password, role || "user"],
+        function(err, result) {
+            if (err) {
+                console.log("Error creating user:", err);
+                return res.status(500).json({
+                    error: "Database error"
+                });
+            }
+
+            res.status(201).json({
+                message: "User created successfully",
+                id: result.insertId
+            });
+        }
+    );
 });
 
 
